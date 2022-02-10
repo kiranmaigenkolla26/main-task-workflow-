@@ -1,0 +1,184 @@
+import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.issue.CustomFieldManager
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.user.ApplicationUser
+import com.atlassian.jira.issue.IssueManager
+import com.atlassian.jira.issue.Issue
+import com.atlassian.jira.event.type.EventDispatchOption
+import com.atlassian.plugin.Plugin
+import com.atlassian.plugin.PluginAccessor
+import com.atlassian.jira.issue.util.IssueChangeHolder
+import com.atlassian.jira.issue.util.DefaultIssueChangeHolder
+import com.atlassian.jira.issue.ModifiedValue
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.crowd.embedded.api.Group
+
+
+def HRPDomainGroups = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("HRP Domain Groups")[0];
+def HCIDomainGroups = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("HCI Domain Groups")[0];
+def MediconnectDomainGroups = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("Mediconnect Domain Groups")[0];
+def D2HDomainGroups = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("D2H Domain Groups")[0];
+def D2HSDomainGroups2 = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("D2HS Domain Groups (d2hs.com)")[0];
+def CreateAccount = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("Create Account")[0];
+def VerscendDomainGroups = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("Verscend Domain Groups")[0];
+def CotivitiDomainGroups = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("Cotiviti Domain Groups")[0];
+def CCAGroups = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("CCA Groups")[0];
+def IHTDomainGroups = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("IHT Domain Groups")[0];
+def TiermedDCDomainGroups = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("TiermedDC Domain Groups")[0];
+
+
+def HRPDomainGroupsCF = issue.getCustomFieldValue(HRPDomainGroups).toString(); 
+def HCIDomainGroupsVCF = issue.getCustomFieldValue(HCIDomainGroups).toString();
+def MediconnectDomainGroupsCF = issue.getCustomFieldValue(MediconnectDomainGroups).toString();
+def D2HDomainGroupsCF = issue.getCustomFieldValue(D2HDomainGroups).toString();
+def D2HSDomainGroups2CF = issue.getCustomFieldValue(D2HSDomainGroups2).toString();
+def CreateAccountCF = issue.getCustomFieldValue(CreateAccount).toString();
+def VerscendDomainGroupsCF = issue.getCustomFieldValue(VerscendDomainGroups).toString();
+def CotivitiDomainGroupsCF = issue.getCustomFieldValue(CotivitiDomainGroups).toString();
+def CCAGroupsCF = issue.getCustomFieldValue(CCAGroups).toString();
+def IHTDomainGroupsCF = issue.getCustomFieldValue(IHTDomainGroups).toString();
+def TiermedDCDomainGroupsCF = issue.getCustomFieldValue(TiermedDCDomainGroups).toString();
+
+def HCIDomainGroupsVal = HCIDomainGroupsVCF.replaceAll(',' , ';')
+def HRPDomainGroupsCFval = HRPDomainGroupsCF.replaceAll(',' , ';')
+def MediconnectDomainGroupsCFval = MediconnectDomainGroupsCF.replaceAll(',' , ';')
+def D2HDomainGroupsCFval = D2HDomainGroupsCF.replaceAll(',' , ';')
+def D2HSDomainGroups2CFval = D2HSDomainGroups2CF.replaceAll(',' , ';')
+def CreateAccountCFval = CreateAccountCF.replaceAll(',' , ';')
+def VerscendDomainGroupsCFval = VerscendDomainGroupsCF.replaceAll(',' , ';')
+def CotivitiDomainGroupsCFval = CotivitiDomainGroupsCF.replaceAll(',' , ';')
+def CCAGroupsCFval = CCAGroupsCF.replaceAll(',' , ';')
+def IHTDomainGroupsCFval = IHTDomainGroupsCF.replaceAll(',' , ';')
+def TiermedDCDomainGroupsCFval = TiermedDCDomainGroupsCF.replaceAll(',' , ';')
+
+if(issue.getSummary().toString() == "RBA Task for your group")
+{
+    
+if(HRPDomainGroups != null)
+{
+issue.setCustomFieldValue(HRPDomainGroups,HRPDomainGroupsCFval)
+}
+if(HCIDomainGroups != null){
+    issue.setCustomFieldValue(HCIDomainGroups,HCIDomainGroupsVal)}
+if(MediconnectDomainGroups != null){
+    issue.setCustomFieldValue(MediconnectDomainGroups,MediconnectDomainGroupsCFval)}
+if(D2HDomainGroups != null){
+    issue.setCustomFieldValue(D2HDomainGroups,D2HDomainGroupsCFval)}
+if(D2HSDomainGroups2 != null){
+    issue.setCustomFieldValue(D2HSDomainGroups2,D2HSDomainGroups2CFval)}
+if(CreateAccount != null){
+    issue.setCustomFieldValue(CreateAccount,CreateAccountCFval)}
+if(VerscendDomainGroups != null){
+    issue.setCustomFieldValue(VerscendDomainGroups,VerscendDomainGroupsCFval)}
+if(CotivitiDomainGroups != null){
+    issue.setCustomFieldValue(CotivitiDomainGroups,CotivitiDomainGroupsCFval)}
+if(CCAGroups != null){
+    issue.setCustomFieldValue(CCAGroups,CCAGroupsCFval)
+}
+if(IHTDomainGroups != null){
+    issue.setCustomFieldValue(IHTDomainGroups,IHTDomainGroupsCFval)}
+if(TiermedDCDomainGroups != null){
+issue.setCustomFieldValue(TiermedDCDomainGroups,TiermedDCDomainGroupsCFval)
+}
+}
+
+
+def customFieldManager = ComponentAccessor.getCustomFieldManager()
+def issueManager = ComponentAccessor.getIssueManager()
+def groupManager = ComponentAccessor.getGroupManager()
+def assignedGroup = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("Internal Assignment Group")[0]
+def insightAssignmentGroupCf = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("Assignment Group")[0]
+def escalationCF =customFieldManager.getCustomFieldObjectsByName("Escalation Point")[0]
+def gm = ComponentAccessor.getGroupManager()
+def appValue = issue.getCustomFieldValue(insightAssignmentGroupCf)
+def managerCF = customFieldManager.getCustomFieldObjectsByName("Group Manager")[0]
+def escalationVal=issue.getCustomFieldValue(escalationCF)
+def managerAttribute = null
+def managerAttributeValues=null
+def manager=null        
+def managerAttributeName = null
+def managerAttributeValuesName=null
+def managerName=null
+String attributeUserID="Key" 
+Class iqlFacadeClass = ComponentAccessor.getPluginAccessor().getClassLoader().findClass("com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade")
+def iqlFacade = ComponentAccessor.getOSGiComponentInstanceOfType(iqlFacadeClass)
+Class objectFacadeClass=ComponentAccessor.getPluginAccessor().getClassLoader().findClass("com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade");
+def objectFacade = ComponentAccessor.getOSGiComponentInstanceOfType(objectFacadeClass)  
+def objectsgroup = iqlFacade.findObjectsByIQLAndSchema(25, "\"Group Name\" = \"Service Desk Requests\"")
+def group1 = gm.getGroup("Service Desk Requests")
+def s1=issue.getSummary().toString().replaceAll('RBA Fullfillment Task for ' , '')
+
+if(issue.getSummary().toString() != "RBA Task for your group" && issue.getSummary().toString()!="RBA Fullfillment Task for Desk Side")
+{
+    if(issue.getSummary().toString() == "RBA Fullfillment Task for Network Ops � Voice")
+    {
+        s1 = "Network Ops – Voice"
+    }
+    objectsgroup = iqlFacade.findObjectsByIQLAndSchema(25, "\"Group Name\" = \""+s1+"\"")
+    group1 = gm.getGroup(s1)
+}
+////if s1 varaible contains desk side text
+if(issue.getSummary().toString()=="RBA Fullfillment Task for Desk Side")
+{
+    def associatename = ComponentAccessor.getCustomFieldManager().getCustomFieldObject("customfield_12707")
+    def result= (issue.getCustomFieldValue(associatename))[0].getObjectKey()
+    String attributeUsernamekey = "Key"
+    def schemaID = 25
+    def objects = iqlFacade.findObjectsByIQLAndSchema(schemaID, "\"" + attributeUsernamekey + "\" = \"" + result + "\"")
+
+
+    def objectlocation = objectFacade.loadObjectAttributeBean(objects[0].getId(), "Location")
+
+    if( objectlocation )
+    {
+        log.info("into loop");
+        def objectAttributeValues = objectlocation.getObjectAttributeValueBeans()
+        def objectAttributeValue = objectAttributeValues[0]
+
+        def newlocation = objectAttributeValue.getValue().toString()
+        newlocation = newlocation.trim().toLowerCase()
+        log.warn("newlocationifcond" + newlocation)
+
+        if(newlocation.contains('atlanta') || newlocation.contains('remote') || newlocation.contains('mckinney') || newlocation.contains('blue bell') || newlocation.contains('wilton') || newlocation.contains('norwalk'))
+        {
+            group1 = gm.getGroup("Desk Side US")
+            objectsgroup = iqlFacade.findObjectsByIQLAndSchema(25, "\"Group Name\" = \"Desk Side US\"")
+        } 
+        //newlocation.contains('Hyderabad')
+        else if(newlocation.contains('hyderabad') || newlocation.contains('pune') || newlocation.contains('bangalore') || newlocation.contains('chennai')
+                || newlocation.contains('coimbatore') || newlocation.contains('noida') || newlocation.contains('kochi')
+                || newlocation.contains('salem') || newlocation.contains('trichy') || newlocation.contains('trivandrum'))
+        {
+            log.warn("icontains:" )
+            group1 = gm.getGroup("Desk Side - India")
+            objectsgroup = iqlFacade.findObjectsByIQLAndSchema(25, "\"Group Name\" = \"Desk Side - India\"")
+            log.warn("conatins-exit")
+        }
+        else if(newlocation.contains('kathmandu'))
+        {
+            group1 = gm.getGroup("Deskside-Nepal")
+            objectsgroup = iqlFacade.findObjectsByIQLAndSchema(25, "\"Group Name\" = \"Deskside-Nepal\"")
+        } 
+        else
+        {
+            
+            group1 = gm.getGroup("Service Desk Requests")
+            objectsgroup = iqlFacade.findObjectsByIQLAndSchema(25, "\"Group Name\" = \"Service Desk Requests\"")
+            log.warn("group:" + objectsgroup)
+          // group1 = gm.getGroup("Desk Side")
+            //objectsgroup = iqlFacade.findObjectsByIQLAndSchema(8, "\"Group Name\" = \"Desk Side\"")
+        }
+    }
+//log.warn("group:" + objectsgroup)
+}
+
+//then add location basesd deskside group
+
+
+
+    def changeHolder = new DefaultIssueChangeHolder();
+    issue.setCustomFieldValue(insightAssignmentGroupCf, objectsgroup)
+    issue.setCustomFieldValue(assignedGroup,[group1])
+
+ 
+  ComponentAccessor.getIssueManager().updateIssue(null, issue, EventDispatchOption.ISSUE_UPDATED, false)
