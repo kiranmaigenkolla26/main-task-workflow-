@@ -1,0 +1,33 @@
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.event.type.EventDispatchOption
+import com.atlassian.jira.issue.IssueManager
+import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.user.ApplicationUser
+import com.atlassian.jira.issue.fields.CustomField
+//to append the values from action items to completed items in parent issue
+String Actionitems = "customfield_12712"
+String completeditems = "customfield_12713"
+ApplicationUser loggedInUser = ComponentAccessor.jiraAuthenticationContext.loggedInUser
+IssueManager issueManager = ComponentAccessor.issueManager
+ if(issue.get("summary") == "RBA Fullfillment Task for Desk Side")
+{
+  def associates = issue.get(Actionitems)
+  MutableIssue parentIssueToUpdate = issueManager.getIssueObject(issue.parentObject.id)
+  String completeditemsParent = parentIssueToUpdate.get(completeditems)
+  String completeditemsParentVal = completeditemsParent ? completeditemsParent : ""
+  parentIssueToUpdate.setFieldValue(completeditems, completeditemsParentVal + "\nHardware:" + associates +"-- Completed")
+  issueManager.updateIssue(loggedInUser, parentIssueToUpdate, EventDispatchOption.DO_NOT_DISPATCH, false)
+}
+else if(issue.get("summary") == "RBA Task for your group")
+{
+  return
+}
+else
+{
+    def associates = issue.get(Actionitems)
+    MutableIssue parentIssueToUpdate = issueManager.getIssueObject(issue.parentObject.id)
+    String completeditemsParent = parentIssueToUpdate.get(completeditems)
+    String completeditemsParentVal = completeditemsParent ? completeditemsParent : ""
+    parentIssueToUpdate.setFieldValue(completeditems, completeditemsParentVal + "\nSoftware:" + associates +"-- Completed")
+    issueManager.updateIssue(loggedInUser, parentIssueToUpdate, EventDispatchOption.DO_NOT_DISPATCH, false)
+}
