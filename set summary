@@ -1,0 +1,75 @@
+import com.atlassian.jira.issue.CustomFieldManager
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.user.ApplicationUser
+import com.atlassian.jira.event.type.EventDispatchOption
+
+//def issue = ComponentAccessor.getIssueManager().getIssueObject("IT-51835")
+def assicatenameCF = issue.getCustomFieldValue(ComponentAccessor.getCustomFieldManager().getCustomFieldObject("customfield_12707"))[0];
+def assicatenameCFtext = issue.getCustomFieldValue(ComponentAccessor.getCustomFieldManager().getCustomFieldObject("customfield_12728"));
+if (assicatenameCF) {
+    issue.setSummary("RBA for OnBoarding -- ${assicatenameCF.name}")
+    log.warn("assicatenameCF")
+} else {
+    issue.setSummary("RBA for OnBoarding -- ${assicatenameCFtext}")
+    log.warn("assicatenameCFtext: ${assicatenameCFtext}")
+}
+
+def associateNameTextCF = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("Associate name")[0] //assicatenameCF.name
+issue.setCustomFieldValue(associateNameTextCF, assicatenameCF.name)
+
+Class objectFacadeClass = ComponentAccessor.getPluginAccessor().getClassLoader().loadClass("com.riadalabs.jira.plugins.insight.channel.external.api.facade.ObjectFacade");
+def objectFacade = ComponentAccessor.getOSGiComponentInstanceOfType(objectFacadeClass);
+
+def hiringManagerCF = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("Hiring Manager")[0]
+def hiringManagers = issue.getCustomFieldValue(hiringManagerCF)
+
+def managerNameTextCF = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("Manager Name")[0]
+if(hiringManagers != null && hiringManagers.isEmpty() == false) {
+issue.setCustomFieldValue(managerNameTextCF, hiringManagers[0].name)
+}
+
+def manager2AttributeBean = objectFacade.loadObjectAttributeBean(hiringManagers?.getAt(0)?.getId(), "Manager1")
+if (manager2AttributeBean) {
+    def objectAttributeValues = manager2AttributeBean.getObjectAttributeValueBeans()
+    def manager2Id = objectAttributeValues[0].value
+
+    def m2ManagerCF = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectsByName("M2 Manager")[0];
+    String manager2UserName
+    String manager2Email
+    ApplicationUser m2Manager
+
+    def manager2UserNameAttributeBean = objectFacade.loadObjectAttributeBean(manager2Id, "User Name")
+    def manager2EmailAttributeBean = objectFacade.loadObjectAttributeBean(manager2Id, "Email Address")
+    if (manager2UserNameAttributeBean) {
+        manager2UserName = manager2UserNameAttributeBean.getObjectAttributeValueBeans()[0].getValue()
+        m2Manager = ComponentAccessor.userManager.getUserByName(manager2UserName)
+    }
+    if (m2Manager == null && manager2EmailAttributeBean != null) {
+        manager2Email = manager2EmailAttributeBean.getObjectAttributeValueBeans()[0].getValue()
+        def users = ComponentAccessor.userSearchService.findUsersByEmail(manager2Email)
+        m2Manager = (users == null || users.isEmpty()) ? null : users[0]
+    }
+    issue.setCustomFieldValue(m2ManagerCF, m2Manager)
+}
+
+Class iqlFacadeClass = ComponentAccessor.getPluginAccessor().getClassLoader().loadClass("com.riadalabs.jira.plugins.insight.channel.external.api.facade.IQLFacade")
+def iqlFacade = ComponentAccessor.getOSGiComponentInstanceOfType(iqlFacadeClass)
+
+def objectsgroup = iqlFacade.findObjectsByIQLAndSchema(25, "\"Group Name\" = \"Role Based access\"")
+log.warn("******(${objectsgroup.name})")
+def groupManager = ComponentAccessor.getGroupManager()
+def group1 = groupManager.getGroup("Role Based access")
+log.warn("******(${group1.name})")
+def assignedGroup = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectByName("Internal Assignment Group")   // Jira Group Picker
+def insightAssignmentGroupCf = ComponentAccessor.getCustomFieldManager().getCustomFieldObjectByName("Assignment Group")	 // Insight Group Field
+ 
+issue.setCustomFieldValue(insightAssignmentGroupCf, objectsgroup)
+issue.setCustomFieldValue(assignedGroup,[group1])
+
+log.warn("insight assignment group : ${issue.getCustomFieldValue(insightAssignmentGroupCf)}")
+log.warn("assignment group : ${issue.getCustomFieldValue(assignedGroup)}")
+
+/*def issueManager = ComponentAccessor.getIssueManager()
+def user = ComponentAccessor.getJiraAuthenticationContext().getLoggedInUser()
+issueManager.updateIssue(user, issue, EventDispatchOption.DO_NOT_DISPATCH, false)
+*/
